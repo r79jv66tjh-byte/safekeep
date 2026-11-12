@@ -1,0 +1,115 @@
+{
+  "name": "SafeKeep",
+  "description": "Versionierte Ordner-Backups (Zeitmaschine, z. B. für Spielstände) mit Wiederherstellung, plus Musik-Duplikat-Finder. Gelöscht wird nur in den Papierkorb; vor dem Überschreiben wird der aktuelle Stand automatisch gesichert.",
+  "category": "Sicherheit & Backup",
+  "commands": [
+    {
+      "name": "status",
+      "description": "Überblick: Backup-Speicherort, belegter Platz, Anzahl gesicherter Ordner.",
+      "run": ["python", "cli.py", "status", "--json"],
+      "args": [],
+      "readonly": true
+    },
+    {
+      "name": "jobs",
+      "description": "Alle gesicherten Ordner auflisten (ID, Name, Pfad, Intervall, Anzahl Versionen, neueste Version).",
+      "run": ["python", "cli.py", "jobs", "--json"],
+      "args": [],
+      "readonly": true
+    },
+    {
+      "name": "versions",
+      "description": "Versionen (Backups) eines gesicherten Ordners, neueste zuerst, mit Änderungen gegenüber der Vorversion.",
+      "run": ["python", "cli.py", "versions", "--json"],
+      "args": [
+        {"name": "job", "flag": "--job", "type": "string", "required": true, "description": "ID oder Name des gesicherten Ordners (aus 'jobs')."},
+        {"name": "limit", "flag": "--limit", "type": "integer", "required": false, "description": "Höchstens so viele Versionen ausgeben."}
+      ],
+      "readonly": true
+    },
+    {
+      "name": "files",
+      "description": "Dateien in einer Version auflisten, optional gefiltert.",
+      "run": ["python", "cli.py", "files", "--json"],
+      "args": [
+        {"name": "job", "flag": "--job", "type": "string", "required": true, "description": "ID oder Name des gesicherten Ordners."},
+        {"name": "version", "flag": "--version", "type": "string", "required": false, "description": "Versions-ID (oder Anfang davon); Standard: neueste."},
+        {"name": "pattern", "flag": "--pattern", "type": "string", "required": false, "description": "Platzhalter-Filter, z. B. *.sav"}
+      ],
+      "readonly": true
+    },
+    {
+      "name": "backup",
+      "description": "Jetzt eine neue Version anlegen. Überschreibt nichts; ohne Änderungen entsteht keine neue Version (außer mit force).",
+      "run": ["python", "cli.py", "backup", "--json"],
+      "args": [
+        {"name": "job", "flag": "--job", "type": "string", "required": false, "description": "ID oder Name des Ordners. Weglassen, wenn all gesetzt ist."},
+        {"name": "all", "flag": "--all", "type": "boolean", "required": false, "description": "Alle aktiven Ordner sichern."},
+        {"name": "force", "flag": "--force", "type": "boolean", "required": false, "description": "Auch ohne Änderungen eine Version anlegen."}
+      ],
+      "readonly": false
+    },
+    {
+      "name": "restore",
+      "description": "Version wiederherstellen. Erst mit dry_run die Vorschau holen (was erstellt/ersetzt wird). Ersetzte Dateien werden vorher automatisch gesichert.",
+      "run": ["python", "cli.py", "restore", "--json"],
+      "args": [
+        {"name": "job", "flag": "--job", "type": "string", "required": true, "description": "ID oder Name des gesicherten Ordners."},
+        {"name": "version", "flag": "--version", "type": "string", "required": false, "description": "Versions-ID (oder Anfang); Standard: neueste."},
+        {"name": "target", "flag": "--target", "type": "string", "required": false, "description": "Anderer Zielordner; Standard: Originalordner."},
+        {"name": "files", "flag": "--files", "type": "string", "required": false, "description": "Nur diese Dateien/Unterordner (relative Pfade, kommagetrennt)."},
+        {"name": "remove_extra", "flag": "--remove-extra", "type": "boolean", "required": false, "description": "Dateien, die es in der Version nicht gab, in den Papierkorb."},
+        {"name": "dry_run", "flag": "--dry-run", "type": "boolean", "required": false, "description": "Nur Vorschau, nichts ändern."}
+      ],
+      "readonly": false
+    },
+    {
+      "name": "delete-version",
+      "description": "Eine Version in den Papierkorb verschieben (Versions-ID ausdrücklich angeben).",
+      "run": ["python", "cli.py", "delete-version", "--json"],
+      "args": [
+        {"name": "job", "flag": "--job", "type": "string", "required": true, "description": "ID oder Name des gesicherten Ordners."},
+        {"name": "version", "flag": "--version", "type": "string", "required": true, "description": "Versions-ID (oder eindeutiger Anfang)."},
+        {"name": "dry_run", "flag": "--dry-run", "type": "boolean", "required": false, "description": "Nur zeigen, was gelöscht würde."}
+      ],
+      "readonly": false
+    },
+    {
+      "name": "add-job",
+      "description": "Einen Ordner neu zur Sicherung hinzufügen (ändert nur die Einstellungen).",
+      "run": ["python", "cli.py", "add-job", "--json"],
+      "args": [
+        {"name": "folder", "flag": "--folder", "type": "string", "required": true, "description": "Zu sichernder Ordner (absoluter Pfad)."},
+        {"name": "name", "flag": "--name", "type": "string", "required": false, "description": "Anzeigename; Standard: Ordnername."},
+        {"name": "interval", "flag": "--interval", "type": "integer", "required": false, "description": "Automatisch alle N Minuten sichern (0 = nur manuell)."},
+        {"name": "keep", "flag": "--keep", "type": "integer", "required": false, "description": "So viele Versionen behalten (0 = alle)."},
+        {"name": "exclude", "flag": "--exclude", "type": "string", "required": false, "description": "Ausschluss-Muster, kommagetrennt, z. B. *.tmp,cache"},
+        {"name": "dry_run", "flag": "--dry-run", "type": "boolean", "required": false, "description": "Nur zeigen, was hinzugefügt würde."}
+      ],
+      "readonly": false
+    },
+    {
+      "name": "music-dupes",
+      "description": "Musik-Duplikate finden (identische Dateien und gleiche Songs in anderer Qualität) und je Gruppe die beste Version nennen.",
+      "run": ["python", "cli.py", "music-dupes", "--json"],
+      "args": [
+        {"name": "folder", "flag": "--folder", "type": "string", "required": false, "description": "Musik-Ordner, kommagetrennt; Standard: in der App eingestellte Ordner."},
+        {"name": "identical_only", "flag": "--identical-only", "type": "boolean", "required": false, "description": "Nur inhaltlich identische Dateien."},
+        {"name": "tolerance", "flag": "--tolerance", "type": "number", "required": false, "description": "Erlaubter Längenunterschied in Sekunden (Standard 3)."}
+      ],
+      "readonly": true
+    },
+    {
+      "name": "music-clean",
+      "description": "Alle Duplikate außer der jeweils besten Version in den Papierkorb. Vorher mit dry_run prüfen.",
+      "run": ["python", "cli.py", "music-clean", "--json"],
+      "args": [
+        {"name": "folder", "flag": "--folder", "type": "string", "required": false, "description": "Musik-Ordner, kommagetrennt."},
+        {"name": "identical_only", "flag": "--identical-only", "type": "boolean", "required": false, "description": "Nur inhaltlich identische Dateien entfernen."},
+        {"name": "tolerance", "flag": "--tolerance", "type": "number", "required": false, "description": "Erlaubter Längenunterschied in Sekunden."},
+        {"name": "dry_run", "flag": "--dry-run", "type": "boolean", "required": false, "description": "Nur zeigen, was in den Papierkorb käme."}
+      ],
+      "readonly": false
+    }
+  ]
+}
