@@ -13,7 +13,7 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 from . import music, trash
-from .backup import (LABEL_SAFETY, SAFETY_JOB_ID, BackupError, BackupStore, Job,
+from .backup import (LABEL_SAFETY, SAFETY_JOB_ID, BackupStore, Job,
                      human_size, parse_snapshot_time)
 from .config import Config
 
@@ -298,7 +298,7 @@ class RestoreDialog(tk.Toplevel):
         self.app.worker.run(
             lambda p: self.store.plan_restore(self.manifest, tgt, None, self.job.excludes, with_extras=True),
             done=self._planned,
-            error=lambda e, tb: self.l_sum.configure(text=f"Fehler: {e}"))
+            error=lambda e, _tb: self.l_sum.configure(text=f"Fehler: {e}"))
 
     def _planned(self, plan):
         if not self.winfo_exists():
@@ -396,7 +396,7 @@ class RestoreDialog(tk.Toplevel):
         if self.winfo_exists():
             self._compute()
 
-    def _failed(self, e, tb):
+    def _failed(self, e, _tb):
         self.app.end_busy()
         self.app.status(f"Wiederherstellung fehlgeschlagen: {e}")
         if self.winfo_exists():
@@ -651,7 +651,7 @@ class BackupTab(ttk.Frame):
             if not quiet and any(e for _, _, e in results):
                 messagebox.showerror("Sicherung", "\n".join(msgs))
 
-        self.worker.run(work, done=done, error=lambda e, tb: (self.end_busy(), self.status(f"Fehler: {e}")),
+        self.worker.run(work, done=done, error=lambda e, _tb: (self.end_busy(), self.status(f"Fehler: {e}")),
                         progress=self.status)
 
     def _auto_changed(self):
@@ -834,7 +834,7 @@ class MusicTab(ttk.Frame):
             lambda p: music.find_duplicates(folders, same, tol, progress=p, cancel=self.cancel.is_set),
             done=self._scanned, error=self._scan_failed, progress=self.status)
 
-    def _scan_failed(self, e, tb):
+    def _scan_failed(self, e, _tb):
         self.running = False
         self.b_scan.configure(state="normal")
         self.status("Suche abgebrochen." if isinstance(e, InterruptedError) else f"Fehler bei der Suche: {e}")

@@ -79,7 +79,6 @@ class SnapshotResult:
     snapshot_id: str | None
     changed: bool
     file_count: int
-    total_size: int
     new_bytes: int
     errors: list
     manifest: dict | None = None
@@ -352,7 +351,7 @@ class BackupStore:
                           == {k: v["h"] for k, v in prev_files.items()})
             changed = not (same_files and dirs == prev.get("dirs", []))
         if only_if_changed and not changed:
-            return SnapshotResult(None, False, len(files), total, 0, errors, prev)
+            return SnapshotResult(None, False, len(files), 0, errors, prev)
 
         manifest = {
             "version": MANIFEST_VERSION,
@@ -368,7 +367,7 @@ class BackupStore:
             "total_size": total,
         }
         sid = self._write_manifest(job_id, manifest)
-        return SnapshotResult(sid, True, len(files), total, new_bytes, errors, manifest)
+        return SnapshotResult(sid, True, len(files), new_bytes, errors, manifest)
 
     def backup_job(self, job: Job, label="Manuell", only_if_changed=True,
                    progress=None, cancel=None) -> SnapshotResult:

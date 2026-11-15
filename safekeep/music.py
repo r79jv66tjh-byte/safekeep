@@ -34,7 +34,6 @@ FORMAT_PREF = {".flac": 5, ".alac": 4, ".wv": 4, ".ape": 3, ".aiff": 2, ".aif": 
 TAG_KEYS = {
     "title": ["TIT2", "title", "TITLE", "\xa9nam", "Title"],
     "artist": ["TPE1", "artist", "ARTIST", "\xa9ART", "Author", "TPE2", "albumartist", "aART"],
-    "album": ["TALB", "album", "ALBUM", "\xa9alb", "WM/AlbumTitle"],
 }
 
 NOISE = re.compile(
@@ -50,7 +49,6 @@ class Track:
     ext: str
     title: str = ""
     artist: str = ""
-    album: str = ""
     duration: float | None = None
     bitrate: int = 0            # kbit/s
     sample_rate: int = 0
@@ -185,7 +183,6 @@ def read_track(path: str) -> Track:
             tags = getattr(f, "tags", None)
             t.title = _first_tag(tags, TAG_KEYS["title"])
             t.artist = _first_tag(tags, TAG_KEYS["artist"])
-            t.album = _first_tag(tags, TAG_KEYS["album"])
             t.from_tags = bool(t.title)
     fa, ft = parse_filename(p.stem)
     if not t.title:
